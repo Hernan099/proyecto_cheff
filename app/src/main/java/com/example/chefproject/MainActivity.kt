@@ -1,7 +1,7 @@
 package com.example.chefproject
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+/** import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,72 +24,78 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import com.example.chefproject.ui.theme.ChefProjectTheme
+*/
+import android.widget.EditText
+import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
+import com.tuempresa.conversormedidas.databinding.ActivityMainBinding
 
+class MainActivity : AppCompatActivity() {
 
-class MainActivity : ComponentActivity() {
+    // View Binding nos da acceso directo a las vistas del XML
+    private lateinit var binding: ActivityMainBinding
+
+    // Contador para llevar la cuenta de cuántos ingredientes llevamos
+    // (útil si después querés identificar cada campo por su índice)
+    private var contadorIngredientes = 1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            ChefProjectTheme {
-                ChefProjectApp()
-            }
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        configurarBotonAgregarIngrediente()
+    }
+
+    /**
+     * Configura el listener del botón que agrega nuevos
+     * cuadros de texto de ingredientes al formulario.
+     */
+    private fun configurarBotonAgregarIngrediente() {
+        binding.btnAgregarIngrediente.setOnClickListener {
+            agregarCampoIngrediente()
         }
     }
-}
 
-@PreviewScreenSizes
-@Composable
-fun ChefProjectApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    /**
+     * Crea un nuevo EditText por código y lo agrega
+     * dentro del contenedor de ingredientes (un LinearLayout).
+     */
+    private fun agregarCampoIngrediente() {
+        contadorIngredientes++
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    icon = {
-                        Icon(
-                            it.icon,
-                            contentDescription = it.label
-                        )
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
-                )
+        val nuevoEditText = EditText(this).apply {
+            hint = "Ingrediente $contadorIngredientes"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 16, 0, 0) // pequeño margen arriba para separarlos
             }
         }
-    ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Greeting(
-                name = "Android",
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
+
+        // contenedorIngredientes es el LinearLayout vertical
+        // donde vamos apilando los EditText de ingredientes
+        binding.contenedorIngredientes.addView(nuevoEditText)
     }
-}
 
-enum class AppDestinations(
-    val label: String,
-    val icon: ImageVector,
-) {
-    HOME("Home", Icons.Default.Home),
-    FAVORITES("Favorites", Icons.Default.Favorite),
-    PROFILE("Profile", Icons.Default.AccountBox),
-}
+    /**
+     * Ejemplo de cómo recolectar los datos del formulario
+     * (lo vas a necesitar para hacer la conversión de medidas después).
+     */
+    private fun obtenerDatosFormulario(): Triple<String, String, List<String>> {
+        val nombreReceta = binding.etNombreReceta.text.toString()
+        val molde = binding.etMolde.text.toString()
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+        val ingredientes = mutableListOf<String>()
+        for (i in 0 until binding.contenedorIngredientes.childCount) {
+            val vista = binding.contenedorIngredientes.getChildAt(i)
+            if (vista is EditText) {
+                ingredientes.add(vista.text.toString())
+            }
+        }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ChefProjectTheme {
-        Greeting("Android")
+        return Triple(nombreReceta, molde, ingredientes)
     }
 }

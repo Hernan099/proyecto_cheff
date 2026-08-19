@@ -1,6 +1,6 @@
 package com.example.chefproject
 import java.math.*
-
+/**
 abstract class Ingrediente(nombre: String, cantidad: BigDecimal) {
     var cant = cantidad
     val name = nombre
@@ -25,3 +25,4 @@ class Solido(nombre: String, cantidad: BigDecimal): Ingrediente(nombre, cantidad
         changeCant(redondear)
     }
 }
+*/
